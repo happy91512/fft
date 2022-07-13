@@ -1,18 +1,18 @@
-from cv2 import waitKey
-from numba import jit
 import numpy as np  
 import math
 import cv2
 import time
+from numba import jit
 
-def dft1(img:np.array):
+@jit(nopython = True)
+def dft_2dim(img:np.array):
     pi = math.pi
     exp = np.exp
     size = img.shape
     img_height = size[0]
     img_width = size[1]
-    dft_arr = np.zeros((img_height, img_width, 2), dtype = complex)
-    start_time = time.time()
+    dft_arr = np.zeros((img_height, img_width, 2), dtype = np.complex128)
+    # start_time = time.time()
     for u in range(0, img_height):
         print(u)
         for v in range(0, img_width):
@@ -22,28 +22,27 @@ def dft1(img:np.array):
     imag_part = np.imag(dft_arr[:, :, 0])
     real_part = np.real(dft_arr[:, :, 0])
     dft_arr[:, :, 1] = imag_part
-    dft_arr[:, :, 0] = real_part 
-    dft_arr = dft_arr.astype("float32")#change the format of des_arr
-    end_time = time.time()
-    print("dft1 spent", str(end_time-start_time)[0:7], "seconds.")
+    dft_arr[:, :, 0] = real_part
     return dft_arr
 
-def dft2(img:np.array):
-    start_time = time.time()
+def dft_cv2(img:np.array):
     dft_arr = cv2.dft(np.float32(img), flags = cv2.DFT_COMPLEX_OUTPUT)
-    end_time = time.time()
-    print("dft2 spent", str(end_time-start_time)[0:7], "seconds.")
     return dft_arr
 
 if __name__ == "__main__":
-    img_path = "./frog_low.jpg"#32*32 image
+    img_path = "./froglow.jpg"
     img = np.array(cv2.imread(img_path, cv2.IMREAD_GRAYSCALE))
 
-    dft_arr1 = dft1(img)
+    start_t = time.time()
+    dft_arr1 = dft_2dim(img)
+    dft_arr1 = dft_arr1.astype(np.float32)
+    print(f"{time.time()- start_t} sec.")
     file1 = open("./dft_arr1", 'w')
     file1.write(str(dft_arr1))
 
-    dft_arr2 = dft2(img)
+    start_t = time.time()
+    dft_arr2 = dft_cv2(img)
+    print(f"{time.time()- start_t} sec.")
     file2 = open("./dft_arr2", 'w')
     file2.write(str(dft_arr2))
 
